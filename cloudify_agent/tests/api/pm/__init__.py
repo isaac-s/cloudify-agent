@@ -439,9 +439,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
 
         def _check_env_path():
             _path = _get_env_var('PATH')
-            print(_path)
             cnt = _path.count(VIRTUALENV)
-            print(cnt)
             assert cnt == 1
         _check_env_path()
 

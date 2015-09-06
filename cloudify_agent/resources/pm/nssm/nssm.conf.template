@@ -22,7 +22,7 @@ echo Setting service environment
 
 set "AGENT_PATH={{ virtualenv_path }}\Scripts"
 set NEW_PATH=%PATH:"='% 
-if "!NEW_PATH!" == "!NEW_PATH:{{ virtualenv_path }}\Scripts=!" (
+if "!NEW_PATH!" == "!NEW_PATH:{{ virtualenv_path }}=!" (
 	set NEW_PATH=!AGENT_PATH!;!NEW_PATH!
 )
 
