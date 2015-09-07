@@ -462,6 +462,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
             _value = _get_command('ctx logger "test"')
             print(_value)
             self.assertEqual(_value, 'test')
+        _check_command()
 
     def test_extra_env_path(self):
         daemon = self.create_daemon()
