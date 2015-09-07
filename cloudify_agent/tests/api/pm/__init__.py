@@ -453,11 +453,10 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         _check_env_path()
 
         def _get_command(var):
-            command = self.celery.send_task(
+            return self.celery.send_task(
                 name='mock_plugin.tasks.get_env_variable',
                 queue=daemon.queue,
                 args=[var]).get(timeout=5)
-            return command.std_out
 
         def _check_command():
             _value = _get_command('ctx logger "test"')
