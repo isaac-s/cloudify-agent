@@ -408,7 +408,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         if VIRTUALENV in os.environ['PATH']:
             if os.name == 'nt':
                 os.environ['PATH'] = os.environ['PATH'].replace(
-                    '{0}{1}'.format(VIRTUALENV, '\Scripts'), '')
+                    '{0}{1}'.format(VIRTUALENV, '\Scripts;'), '')
 
         daemon = self.create_daemon()
         daemon.create()
