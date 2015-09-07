@@ -377,9 +377,9 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         self.assert_registered_tasks(daemon2.name)
 
     def test_verify_conf_env_variables(self):
-        os.environ['PATH'] = '{0}{1}{2}'.format(VIRTUALENV,
-                                                os.pathsep,
-                                                os.environ['PATH'])
+        if VIRTUALENV not in os.environ['PATH']:
+            os.environ['PATH'] = '{0}{1}{2}'.format(
+                VIRTUALENV, os.pathsep, os.environ['PATH'])
 
         daemon = self.create_daemon()
         daemon.create()
@@ -405,6 +405,11 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         _check_env_path()
 
     def test_conf_env_variables(self):
+        if VIRTUALENV in os.environ['PATH']:
+            if os.name == 'nt':
+                os.environ['PATH'] = os.environ['PATH'].replace(
+                    '{0}{1}'.format(VIRTUALENV, '\Scripts'), '')
+
         daemon = self.create_daemon()
         daemon.create()
         daemon.configure()
