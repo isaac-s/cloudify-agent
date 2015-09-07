@@ -452,6 +452,18 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
             self.assertIn(VIRTUALENV, _path)
         _check_env_path()
 
+        def _get_command(var):
+            command = self.celery.send_task(
+                name='mock_plugin.tasks.get_env_variable',
+                queue=daemon.queue,
+                args=[var]).get(timeout=5)
+            return command.std_out
+
+        def _check_command():
+            _value = _get_command('ctx logger "test"')
+            print(_value)
+            self.assertEqual(_value, 'test')
+
     def test_extra_env_path(self):
         daemon = self.create_daemon()
         daemon.extra_env_path = utils.env_to_file(
