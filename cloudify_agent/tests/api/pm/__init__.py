@@ -411,9 +411,6 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
             if os.name == 'nt':
                 os.environ['PATH'] = os.environ['PATH'].replace(
                     '{0}{1}'.format(VIRTUALENV, '\Scripts;'), '')
-            else:
-                os.environ['PATH'] = os.environ['PATH'].replace(
-                    '{0}{1}'.format(VIRTUALENV, '/bin'), '')
 
         daemon = self.create_daemon()
         daemon.create()
@@ -461,16 +458,19 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
             return self.celery.send_task(
                 name='mock_plugin.tasks.call_subprocess',
                 queue=daemon.queue,
-                args=[var]).get(timeout=5)
+                args=[var]).get(timeout=5, propagate=True)
 
         def _check_command():
             if os.name == 'nt':
                 command = 'type {0}'.format('c:\Windows\win.ini')
-            # else:
-            #     command = 'cat {0}'.format(test_file)
-            _value = _get_command(command)
-            print(_value)
-            self.assertEqual(_value, 'fonts')
+                _value = _get_command(command)
+                print(_value)
+                self.assertEqual(_value, 'fonts')
+            else:
+                command = 'cat {0}'.format('/bin/sh')
+                _value = _get_command(command)
+                print(_value)
+                self.assertEqual(_value, '0')
         _check_command()
 
     def test_extra_env_path(self):
