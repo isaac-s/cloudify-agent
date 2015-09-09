@@ -18,6 +18,7 @@ import nose.tools
 import time
 import inspect
 import types
+import tempfile
 from functools import wraps
 from mock import _get_target
 from mock import patch
@@ -377,33 +378,32 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         self.assert_registered_tasks(daemon2.name)
 
     def test_verify_conf_env_variables(self):
-        if os.name == 'nt':
-            if VIRTUALENV not in os.environ['PATH']:
-                os.environ['PATH'] = '{0}{1}{2}'.format(
-                    VIRTUALENV, os.pathsep, os.environ['PATH'])
+        if VIRTUALENV not in os.environ['PATH']:
+            os.environ['PATH'] = '{0}{1}{2}'.format(
+                VIRTUALENV, os.pathsep, os.environ['PATH'])
 
-            daemon = self.create_daemon()
-            daemon.create()
-            daemon.configure()
-            self.installer.install(
-                os.path.join(resources.get_resource('plugins'),
-                             'mock-plugin'))
-            daemon.register('mock-plugin')
-            daemon.start()
+        daemon = self.create_daemon()
+        daemon.create()
+        daemon.configure()
+        self.installer.install(
+            os.path.join(resources.get_resource('plugins'),
+                         'mock-plugin'))
+        daemon.register('mock-plugin')
+        daemon.start()
 
-            def _get_env_var(var):
-                return self.celery.send_task(
-                    name='mock_plugin.tasks.get_env_variable',
-                    queue=daemon.queue,
-                    args=[var]).get(timeout=5)
+        def _get_env_var(var):
+            return self.celery.send_task(
+                name='mock_plugin.tasks.get_env_variable',
+                queue=daemon.queue,
+                args=[var]).get(timeout=5)
 
-            def _check_env_path():
-                _path = _get_env_var('PATH')
-                print(_path)
-                cnt = _path.count(VIRTUALENV)
-                print(cnt)
-                assert cnt == 1
-            _check_env_path()
+        def _check_env_path():
+            _path = _get_env_var('PATH')
+            print(_path)
+            cnt = _path.count(VIRTUALENV)
+            print(cnt)
+            self.assertEqual(cnt, 1)
+        _check_env_path()
 
     def test_conf_env_variables(self):
         if os.name == 'nt':
@@ -453,17 +453,24 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
             self.assertIn(VIRTUALENV, _path)
         _check_env_path()
 
-        # def _get_command(var):
-        #     return self.celery.send_task(
-        #         name='mock_plugin.tasks.get_env_variable',
-        #         queue=daemon.queue,
-        #         args=[var]).get(timeout=5)
+        def _get_command(var):
+            return self.celery.send_task(
+                name='mock_plugin.tasks.call_subprocess',
+                queue=daemon.queue,
+                args=[var]).get(timeout=5)
 
-        # def _check_command():
-        #     _value = _get_command('ctx logger "test"')
-        #     print(_value)
-        #     self.assertEqual(_value, 'test')
-        # _check_command()
+        def _check_command():
+            test_file = tempfile.mktemp()
+            arg = 'test'
+            with open(test_file, 'w') as file:
+                file.write(arg)
+            if os.name == 'nt':
+                command = 'type {0}'.format(test_file)
+            else:
+                command = 'cat {0}'.format(test_file)
+            _value = _get_command(command)
+            self.assertEqual(_value, arg)
+        _check_command()
 
     def test_extra_env_path(self):
         daemon = self.create_daemon()
