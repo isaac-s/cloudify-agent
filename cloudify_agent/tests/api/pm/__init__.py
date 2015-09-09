@@ -410,9 +410,9 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
             if os.name == 'nt':
                 os.environ['PATH'] = os.environ['PATH'].replace(
                     '{0}{1}'.format(VIRTUALENV, '\Scripts;'), '')
-            # else:
-            #     os.environ['PATH'] = os.environ['PATH'].replace(
-            #         '{0}{1}'.format(VIRTUALENV, '/bin'), '')
+            else:
+                os.environ['PATH'] = os.environ['PATH'].replace(
+                    '{0}{1}'.format(VIRTUALENV, '/bin'), '')
 
         daemon = self.create_daemon()
         daemon.create()
@@ -472,6 +472,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         #     else:
         #         command = 'cat {0}'.format(test_file)
         #     _value = _get_command(command)
+        #     print(_value)
         #     self.assertEqual(_value, arg)
         # _check_command()
 
