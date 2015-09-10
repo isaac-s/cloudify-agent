@@ -471,7 +471,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
                 command = 'type {0}'.format(temp_file)
             else:
                 command = 'cat {0}'.format(temp_file)
-                _value = _get_command(command)
+            _value = _get_command(command)
             print(_value)
             self.assetIn(_value, 'test')
         _check_command()
