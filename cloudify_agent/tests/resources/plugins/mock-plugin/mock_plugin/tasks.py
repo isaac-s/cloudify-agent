@@ -16,7 +16,7 @@
 import os
 
 from cloudify.decorators import operation
-from cloudify.utils import LocalCommandRunner
+# from cloudify.utils import LocalCommandRunner
 
 
 @operation
