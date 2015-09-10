@@ -16,7 +16,7 @@
 import os
 
 from cloudify.decorators import operation
-# from cloudify.utils import LocalCommandRunner
+from cloudify.utils import LocalCommandRunner
 
 
 @operation
@@ -29,8 +29,8 @@ def get_env_variable(env_variable, **_):
     return os.environ[env_variable]
 
 
-# @operation
-# def call_subprocess(command, **_):
-#     runner = LocalCommandRunner()
-#     result = runner.run(command)
-#     return result.std_out
+@operation
+def call_subprocess(command, **_):
+    runner = LocalCommandRunner()
+    result = runner.run(command)
+    return result.std_out

@@ -12,6 +12,8 @@ export VIRTUALENV={{ virtualenv_path }}
 if [[ $PATH != *"${VIRTUALENV}"* ]]
 then
     export PATH="${VIRTUALENV}/bin:${PATH}"
+else
+    export PATH="${PATH}"
 fi
 
 # Celery worker environment variables

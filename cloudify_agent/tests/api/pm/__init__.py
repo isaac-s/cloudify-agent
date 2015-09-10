@@ -18,7 +18,7 @@ import nose.tools
 import time
 import inspect
 import types
-# import tempfile
+import tempfile
 from functools import wraps
 from mock import _get_target
 from mock import patch
@@ -456,25 +456,25 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
             self.assertIn(VIRTUALENV, _path)
         _check_env_path()
 
-        # def _get_command(var):
-        #     return self.celery.send_task(
-        #         name='mock_plugin.tasks.call_subprocess',
-        #         queue=daemon.queue,
-        #         args=[var]).get(timeout=5, propagate=True)
-        #
-        # def _check_command():
-        #     temp_file = tempfile.mktemp()
-        #     tmp = open(temp_file, 'w')
-        #     tmp.write('test')
-        #     tmp.close()
-        #     if os.name == 'nt':
-        #         command = 'type {0}'.format(temp_file)
-        #     else:
-        #         command = 'cat {0}'.format(temp_file)
-        #     _value = _get_command(command)
-        #     print(_value)
-        #     self.assertEqual(_value, 'test')
-        # _check_command()
+        def _get_command(var):
+            return self.celery.send_task(
+                name='mock_plugin.tasks.call_subprocess',
+                queue=daemon.queue,
+                args=[var]).get(timeout=5, propagate=True)
+
+        def _check_command():
+            fd, temp_file = tempfile.mkstemp()
+            os.close(fd)
+            with open(temp_file, 'w') as tmp:
+                tmp.write('test')
+            if os.name == 'nt':
+                command = 'type {0}'.format(temp_file)
+            else:
+                command = 'cat {0}'.format(temp_file)
+            _value = _get_command(command)
+            print(_value)
+            self.assertEqual(_value, 'test')
+        _check_command()
 
     def test_extra_env_path(self):
         daemon = self.create_daemon()
