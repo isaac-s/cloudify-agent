@@ -33,4 +33,4 @@ def get_env_variable(env_variable, **_):
 def call_subprocess(command, **_):
     runner = LocalCommandRunner()
     result = runner.run(command)
-    return result.std_out
+    return result.std_out, result.std_err, result.return_code

@@ -378,10 +378,9 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         self.assert_registered_tasks(daemon2.name)
 
     def test_verify_conf_env_variables(self):
-        if os.name == 'nt':
-            if VIRTUALENV not in os.environ['PATH']:
-                os.environ['PATH'] = '{0}{1}{2}'.format(
-                    VIRTUALENV, os.pathsep, os.environ['PATH'])
+        if VIRTUALENV not in os.environ['PATH']:
+            os.environ['PATH'] = '{0}{1}{2}'.format(
+                VIRTUALENV, os.pathsep, os.environ['PATH'])
 
         daemon = self.create_daemon()
         daemon.create()
@@ -411,9 +410,10 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
             if os.name == 'nt':
                 os.environ['PATH'] = os.environ['PATH'].replace(
                     '{0}{1}'.format(VIRTUALENV, '\Scripts;'), '')
-        # else:
-        #     os.environ['PATH'] = os.environ['PATH'].replace(
-        #         '{0}{1}'.format(VIRTUALENV, '/bin:'), '')
+            else:
+                os.environ['PATH'] = os.environ['PATH'].replace(
+                    '{0}{1}'.format(VIRTUALENV, '/bin:'), '')
+
         daemon = self.create_daemon()
         daemon.create()
         daemon.configure()
@@ -467,13 +467,13 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
             os.close(fd)
             with open(temp_file, 'w') as tmp:
                 tmp.write('test')
-                if os.name == 'nt':
-                    command = 'type {0}'.format(temp_file)
-                else:
-                    command = 'cat {0}'.format(temp_file)
+            if os.name == 'nt':
+                command = 'type {0}'.format(temp_file)
+            else:
+                command = 'cat {0}'.format(temp_file)
                 _value = _get_command(command)
             print(_value)
-            self.assertEqual(_value, 'test')
+            self.assetIn(_value, 'test')
         _check_command()
 
     def test_extra_env_path(self):
