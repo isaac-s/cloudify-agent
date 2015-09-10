@@ -9,13 +9,12 @@ export MANAGER_REST_PORT={{ manager_port }}
 export MANAGER_FILE_SERVER_URL=http://{{ manager_ip }}:53229
 export MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL=http://{{ manager_ip }}:53229/blueprints
 export VIRTUALENV={{ virtualenv_path }}
-if [[ $PATH != *"${VIRTUALENV}"* ]]
-then
-    PATH1="${VIRTUALENV}/bin:${PATH}"
+if [[ $PATH != *"${VIRTUALENV}"* ]]; then
+    export PATH="${VIRTUALENV}/bin:${PATH}"
 else
-    PATH1="${PATH}"
+    export PATH="${PATH}"
 fi
-export PATH=${PATH1}
+
 
 # Celery worker environment variables
 export CELERY_WORK_DIR={{ workdir }}
