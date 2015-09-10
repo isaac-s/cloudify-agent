@@ -18,7 +18,7 @@ import nose.tools
 import time
 import inspect
 import types
-import tempfile
+# import tempfile
 from functools import wraps
 from mock import _get_target
 from mock import patch
