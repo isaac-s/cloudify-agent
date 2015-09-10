@@ -467,11 +467,11 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
             os.close(fd)
             with open(temp_file, 'w') as tmp:
                 tmp.write('test')
-            if os.name == 'nt':
-                command = 'type {0}'.format(temp_file)
-            else:
-                command = 'cat {0}'.format(temp_file)
-            _value = _get_command(command)
+                if os.name == 'nt':
+                    command = 'type {0}'.format(temp_file)
+                else:
+                    command = 'cat {0}'.format(temp_file)
+                _value = _get_command(command)
             print(_value)
             self.assertEqual(_value, 'test')
         _check_command()
