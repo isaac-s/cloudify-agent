@@ -11,10 +11,11 @@ export MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL=http://{{ manager_ip }}:53229/blu
 export VIRTUALENV={{ virtualenv_path }}
 if [[ $PATH != *"${VIRTUALENV}"* ]]
 then
-    export PATH="${VIRTUALENV}/bin:${PATH}"
+    PATH1="${VIRTUALENV}/bin:${PATH}"
 else
-    export PATH="${PATH}"
+    PATH1="${PATH}"
 fi
+export PATH=${PATH1}
 
 # Celery worker environment variables
 export CELERY_WORK_DIR={{ workdir }}
