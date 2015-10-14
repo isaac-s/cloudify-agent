@@ -19,8 +19,10 @@ import pip
 import shutil
 import tempfile
 
+from cloudify.exceptions import NonRecoverableError
 from cloudify.utils import setup_logger
 from cloudify.utils import LocalCommandRunner
+from cloudify.utils import get_manager_file_server_blueprints_root_url
 
 from cloudify_agent.api import utils
 from cloudify_agent.api import plugins
@@ -34,14 +36,15 @@ class PluginInstaller(object):
         self.logger = logger or setup_logger(self.__class__.__name__)
         self.runner = LocalCommandRunner(logger=self.logger)
 
-    def install(self, source, args=''):
+    def install(self, plugin, blueprint_id=None):
 
         """
         Install the plugin to the current virtualenv.
 
-        :param source: URL to the plugin. Any pip acceptable URL is ok.
-        :param args: extra installation arguments passed to the pip command
+        :param plugin: A plugin structure as defined in the blueprint
         """
+        source = get_plugin_source(plugin, blueprint_id)
+        args = get_plugin_args(plugin)
 
         plugin_dir = None
         try:
@@ -221,3 +224,40 @@ def extract_package_name(package_dir):
         cwd=package_dir
     ).std_out
     return plugin_name
+
+
+def get_plugin_args(plugin):
+    args = plugin.get('install_arguments') or ''
+    return args.strip()
+
+
+def get_plugin_source(plugin, blueprint_id=None):
+
+    source = plugin.get('source') or ''
+    if source:
+        source = source.strip()
+    else:
+        raise NonRecoverableError('Plugin source is not defined')
+
+    # validate source url
+    if '://' in source:
+        split = source.split('://')
+        schema = split[0]
+        if schema not in ['http', 'https']:
+            # invalid schema
+            raise NonRecoverableError('Invalid schema: {0}'.format(schema))
+    else:
+        # Else, assume its a relative path from <blueprint_home>/plugins
+        # to a directory containing the plugin archive.
+        # in this case, the archived plugin is expected to reside on the
+        # manager file server as a zip file.
+        if blueprint_id is None:
+            raise ValueError('blueprint_id must be specified when plugin '
+                             'source does not contain a schema')
+        blueprints_root = get_manager_file_server_blueprints_root_url()
+        blueprint_plugins_url = '{0}/{1}/plugins'.format(
+            blueprints_root, blueprint_id)
+
+        source = '{0}/{1}.zip'.format(blueprint_plugins_url, source)
+
+    return source
