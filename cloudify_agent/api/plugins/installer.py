@@ -15,14 +15,19 @@
 
 import os
 import sys
-import pip
 import shutil
 import tempfile
+import platform
+
+import pip
+from distutils.version import LooseVersion
+from wagon import wagon
 
 from cloudify.exceptions import NonRecoverableError
 from cloudify.utils import setup_logger
 from cloudify.utils import LocalCommandRunner
 from cloudify.utils import get_manager_file_server_blueprints_root_url
+from cloudify.manager import get_rest_client
 
 from cloudify_agent.api import utils
 from cloudify_agent.api import plugins
@@ -37,15 +42,37 @@ class PluginInstaller(object):
         self.runner = LocalCommandRunner(logger=self.logger)
 
     def install(self, plugin, blueprint_id=None):
-
         """
         Install the plugin to the current virtualenv.
 
         :param plugin: A plugin structure as defined in the blueprint
         """
+        plugin_id = get_plugin_id(plugin)
         source = get_plugin_source(plugin, blueprint_id)
         args = get_plugin_args(plugin)
+        if plugin_id:
+            if args:
+                raise NonRecoverableError('not supported')
+            self._wagon_install(plugin_id)
+            return plugin['package_name']
+        elif source:
+            return self._pip_install(source, args)
+        else:
+            raise NonRecoverableError('No source or managed plugin')
 
+    def _wagon_install(self, plugin_id):
+        client = get_rest_client()
+        fd, wagon_path = tempfile.mkstemp()
+        os.close(fd)
+        try:
+            client.plugins.download(plugin_id=plugin_id,
+                                    output_file=wagon_path)
+            w = wagon.Wagon(source=wagon_path)
+            w.install(ignore_platform=True)
+        finally:
+            os.remove(wagon_path)
+
+    def _pip_install(self, source, args):
         plugin_dir = None
         try:
             if os.path.isabs(source):
@@ -66,11 +93,9 @@ class PluginInstaller(object):
                 self.logger.debug('Removing directory: {0}'
                                   .format(plugin_dir))
                 shutil.rmtree(plugin_dir)
-
         return package_name
 
     def uninstall(self, package_name, ignore_missing=True):
-
         """
         Uninstall the plugin from the current virtualenv. By default this
         operation will fail when trying to uninstall a plugin that is not
@@ -98,7 +123,6 @@ class PluginInstaller(object):
 
 
 def extract_package_to_dir(package_url):
-
     """
     Extracts a pip package to a temporary directory.
 
@@ -154,7 +178,6 @@ def is_pip6_or_higher(pip_version=None):
 
 
 def parse_pip_version(pip_version=''):
-
     """
     Parses a pip version string to identify major, minor, micro versions.
 
@@ -205,7 +228,6 @@ def parse_pip_version(pip_version=''):
 
 
 def extract_package_name(package_dir):
-
     """
     Detects the package name of the package located at 'package_dir' as
     specified in the package setup.py file.
@@ -226,18 +248,62 @@ def extract_package_name(package_dir):
     return plugin_name
 
 
-def get_plugin_args(plugin):
-    args = plugin.get('install_arguments') or ''
-    return args.strip()
+def get_plugin_id(plugin):
+    package_name = plugin.get('package_name')
+    package_version = plugin.get('package_version')
+    distribution = plugin.get('distribution')
+    distribution_version = plugin.get('distribution_version')
+    distribution_release = plugin.get('distribution_release')
+    supported_platform = plugin.get('supported_platform')
+
+    if not package_name:
+        return None
+
+    query_parameters = {
+        'package_name': package_name
+    }
+    if package_version:
+        query_parameters['package_version'] = package_version
+    if distribution:
+        query_parameters['distribution'] = distribution
+    if distribution_version:
+        query_parameters['distribution_version'] = distribution_version
+    if distribution_release:
+        query_parameters['distribution_release'] = distribution_release
+    if supported_platform:
+        query_parameters['supported_platform'] = supported_platform
+    client = get_rest_client()
+    plugins = client.plugins.list(**query_parameters)
+
+    if not supported_platform:
+        plugins = [p for p in plugins
+                   if p.supported_platform in ['any', os.name]]
+    if os.name != 'nt':
+        a_dist, _, a_dist_release = platform.linux_distribution()
+        if not distribution:
+            plugins = [p for p in plugins
+                       if p.supported_platform == 'any' or
+                       p.distribution == a_dist]
+        if not distribution_release:
+            plugins = [p for p in plugins
+                       if p.supported_platform == 'any' or
+                       p.distribution_release == a_dist_release]
+
+    if not plugins:
+        return None
+
+    plugin_result = sorted(plugins,
+                           key=lambda plug: LooseVersion(plug.package_version),
+                           reverse=True)[0]
+    return plugin_result.id
 
 
 def get_plugin_source(plugin, blueprint_id=None):
 
     source = plugin.get('source') or ''
-    if source:
-        source = source.strip()
-    else:
-        raise NonRecoverableError('Plugin source is not defined')
+    if not source:
+        return None
+    source = source.strip()
 
     # validate source url
     if '://' in source:
@@ -261,3 +327,8 @@ def get_plugin_source(plugin, blueprint_id=None):
         source = '{0}/{1}.zip'.format(blueprint_plugins_url, source)
 
     return source
+
+
+def get_plugin_args(plugin):
+    args = plugin.get('install_arguments') or ''
+    return args.strip()
