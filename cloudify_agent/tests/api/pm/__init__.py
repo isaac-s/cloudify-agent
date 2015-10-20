@@ -200,6 +200,11 @@ class BaseDaemonLiveTestCase(BaseTest):
                            'for {1} seconds'.format(name, timeout))
 
 
+def patch_get_source(fn):
+    return patch('cloudify_agent.api.plugins.install.get_plugin_source',
+                 lambda plugin: plugin.get('source'))(fn)
+
+
 @nose.tools.nottest
 class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
 
@@ -260,6 +265,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         daemon.stop()
         daemon.start(delete_amqp_queue=True)
 
+    @patch_get_source
     def test_start_with_error(self):
         daemon = self.create_daemon()
         daemon.create()
@@ -308,6 +314,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         except exceptions.DaemonShutdownTimeout as e:
             self.assertTrue('failed to stop in -1 seconds' in str(e))
 
+    @patch_get_source
     def test_register(self):
         daemon = self.create_daemon()
         daemon.create()
@@ -321,6 +328,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
                                   'mock_plugin.tasks.get_env_variable'])
         )
 
+    @patch_get_source
     def test_unregister(self):
         daemon = self.create_daemon()
         daemon.create()
@@ -337,6 +345,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         daemon.restart()
         self.assert_registered_tasks(daemon.name)
 
+    @patch_get_source
     def test_restart(self):
         daemon = self.create_daemon()
         daemon.create()
@@ -368,6 +377,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         self.assert_daemon_alive(daemon2.name)
         self.assert_registered_tasks(daemon2.name)
 
+    @patch_get_source
     def test_conf_env_variables(self):
         daemon = self.create_daemon()
         daemon.create()
@@ -408,6 +418,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         #     self.assertIn(VIRTUALENV, _path)
         # _check_env_path()
 
+    @patch_get_source
     def test_extra_env_path(self):
         daemon = self.create_daemon()
         daemon.extra_env_path = utils.env_to_file(

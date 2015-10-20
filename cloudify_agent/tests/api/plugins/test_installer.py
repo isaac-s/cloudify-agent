@@ -77,7 +77,7 @@ class PluginInstallerTest(BaseTest):
     def _plugin_struct(self, source, args=None):
         return {
             'source': self._create_plugin_url(source),
-            'args': args
+            'install_arguments': args
         }
 
     def _assert_plugin_installed(self, plugin_name, dependencies=None):
