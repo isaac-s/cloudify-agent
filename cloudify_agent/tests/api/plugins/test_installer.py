@@ -17,8 +17,10 @@ import tempfile
 import logging
 import os
 
+from cloudify import constants
 from cloudify.utils import setup_logger
 from cloudify.utils import LocalCommandRunner
+from cloudify.exceptions import NonRecoverableError
 from cloudify.exceptions import CommandExecutionException
 
 from cloudify_agent.api.plugins import installer
@@ -212,3 +214,43 @@ class PipVersionParserTestCase(BaseTest):
         self.assertRaisesRegex(
             exceptions.PluginInstallationError, expected_err_msg,
             installer.parse_pip_version, [6])
+
+
+class TestGetSourceAndGetArgs(BaseTest):
+
+    def test_get_url_and_args_http_no_args(self):
+        plugin = {'source': 'http://google.com'}
+        url = installer.get_plugin_source(plugin)
+        args = installer.get_plugin_args(plugin)
+        self.assertEqual(url, 'http://google.com')
+        self.assertEqual(args, '')
+
+    def test_get_url_https(self):
+        plugin = {
+            'source': 'https://google.com',
+            'install_arguments': '--pre'
+        }
+        url = installer.get_plugin_source(plugin)
+        args = installer.get_plugin_args(plugin)
+
+        self.assertEqual(url, 'https://google.com')
+        self.assertEqual(args, '--pre')
+
+    def test_get_url_faulty_schema(self):
+        self.assertRaises(NonRecoverableError,
+                          installer.get_plugin_source,
+                          {'source': 'bla://google.com'})
+
+    def test_get_plugin_source_from_blueprints_dir(self):
+        plugin = {
+            'source': 'plugin-dir-name'
+        }
+        with test_utils.env(
+                constants.MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL_KEY,
+                'localhost'):
+            source = installer.get_plugin_source(
+                plugin,
+                blueprint_id='blueprint_id')
+        self.assertEqual(
+            'localhost/blueprint_id/plugins/plugin-dir-name.zip',
+            source)
