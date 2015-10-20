@@ -201,7 +201,7 @@ class BaseDaemonLiveTestCase(BaseTest):
 
 
 def patch_get_source(fn):
-    return patch('cloudify_agent.api.plugins.install.get_plugin_source',
+    return patch('cloudify_agent.api.plugins.installer.get_plugin_source',
                  lambda plugin: plugin.get('source'))(fn)
 
 
