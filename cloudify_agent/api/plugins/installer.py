@@ -279,7 +279,8 @@ def get_plugin_id(plugin):
         plugins = [p for p in plugins
                    if p.supported_platform in ['any', os.name]]
     if os.name != 'nt':
-        a_dist, _, a_dist_release = platform.linux_distribution()
+        a_dist, _, a_dist_release = platform.linux_distribution(
+            full_distribution_name=False)
         if not distribution:
             plugins = [p for p in plugins
                        if p.supported_platform == 'any' or
