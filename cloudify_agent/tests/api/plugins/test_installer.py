@@ -72,6 +72,12 @@ class PluginInstallerTest(BaseTest):
     def _create_plugin_url(self, plugin_tar_name):
         return '{0}/{1}'.format(self.file_server_url, plugin_tar_name)
 
+    def _plugin_struct(self, source, args=None):
+        return {
+            'source': self._create_plugin_url(source),
+            'args': args
+        }
+
     def _assert_plugin_installed(self, plugin_name, dependencies=None):
         if not dependencies:
             dependencies = []
@@ -93,19 +99,19 @@ class PluginInstallerTest(BaseTest):
         self.assertNotIn(plugin_name, packages)
 
     def test_install(self):
-        self.installer.install(self._create_plugin_url('mock-plugin.tar'))
+        self.installer.install(self._plugin_struct(source='mock-plugin.tar'))
         self._assert_plugin_installed('mock-plugin')
 
     def test_install_with_requirements(self):
-        self.installer.install(self._create_plugin_url(
-            'mock-plugin-with-requirements.tar'),
-            '-r requirements.txt')
+        self.installer.install(self._plugin_struct(
+            source='mock-plugin-with-requirements.tar',
+            args='-r requirements.txt'))
         self._assert_plugin_installed(
             plugin_name='mock-plugin-with-requirements',
             dependencies=['TowelStuff'])
 
     def test_uninstall(self):
-        self.installer.install(self._create_plugin_url('mock-plugin.tar'))
+        self.installer.install(self._plugin_struct(source='mock-plugin.tar'))
         self._assert_plugin_installed('mock-plugin')
         self.installer.uninstall('mock-plugin')
         self._assert_plugin_not_installed('mock-plugin')

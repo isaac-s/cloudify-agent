@@ -292,9 +292,8 @@ def get_plugin_id(plugin):
     if not plugins:
         return None
 
-    plugin_result = sorted(plugins,
-                           key=lambda plug: LooseVersion(plug.package_version),
-                           reverse=True)[0]
+    plugin_result = max(plugins,
+                        key=lambda plug: LooseVersion(plug.package_version))
     return plugin_result.id
 
 

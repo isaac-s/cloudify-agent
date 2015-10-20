@@ -264,9 +264,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         daemon = self.create_daemon()
         daemon.create()
         daemon.configure()
-        self.installer.install(
-            os.path.join(resources.get_resource('plugins'),
-                         'mock-plugin-error'))
+        self.installer.install(self.plugin_struct())
         daemon.register('mock-plugin-error')
         try:
             daemon.start()
@@ -314,9 +312,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         daemon = self.create_daemon()
         daemon.create()
         daemon.configure()
-        self.installer.install(
-            os.path.join(resources.get_resource('plugins'),
-                         'mock-plugin'))
+        self.installer.install(self.plugin_struct())
         daemon.register('mock-plugin')
         daemon.start()
         self.assert_registered_tasks(
@@ -329,9 +325,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         daemon = self.create_daemon()
         daemon.create()
         daemon.configure()
-        self.installer.install(
-            os.path.join(resources.get_resource('plugins'),
-                         'mock-plugin'))
+        self.installer.install(self.plugin_struct())
         daemon.register('mock-plugin')
         daemon.start()
         self.assert_registered_tasks(
@@ -347,9 +341,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         daemon = self.create_daemon()
         daemon.create()
         daemon.configure()
-        self.installer.install(
-            os.path.join(resources.get_resource('plugins'),
-                         'mock-plugin'))
+        self.installer.install(self.plugin_struct())
         daemon.start()
         daemon.register('mock-plugin')
         daemon.restart()
@@ -380,9 +372,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         daemon = self.create_daemon()
         daemon.create()
         daemon.configure()
-        self.installer.install(
-            os.path.join(resources.get_resource('plugins'),
-                         'mock-plugin'))
+        self.installer.install(self.plugin_struct())
         daemon.register('mock-plugin')
         daemon.start()
 
@@ -426,9 +416,7 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         )
         daemon.create()
         daemon.configure()
-        self.installer.install(
-            os.path.join(resources.get_resource('plugins'),
-                         'mock-plugin'))
+        self.installer.install(self.plugin_struct())
         daemon.register('mock-plugin')
         daemon.start()
 
@@ -458,3 +446,10 @@ class BaseDaemonProcessManagementTest(BaseDaemonLiveTestCase):
         daemon.start()
         daemon.delete(force=True)
         self.assert_daemon_dead(daemon.name)
+
+    @staticmethod
+    def plugin_struct():
+        return {
+            'source': os.path.join(resources.get_resource('plugins'),
+                                   'mock-plugin')
+        }

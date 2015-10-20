@@ -16,7 +16,7 @@
 from cloudify import constants
 
 from cloudify.exceptions import NonRecoverableError
-from cloudify_agent import operations
+from cloudify_agent.api.plugins import installer
 
 from cloudify_agent.tests import utils
 from cloudify_agent.tests import BaseTest
@@ -33,8 +33,8 @@ class TestOperations(BaseTest):
 
     def test_get_url_and_args_http_no_args(self):
         plugin = {'source': 'http://google.com'}
-        url = operations.get_plugin_source(plugin)
-        args = operations.get_plugin_args(plugin)
+        url = installer.get_plugin_source(plugin)
+        args = installer.get_plugin_args(plugin)
         self.assertEqual(url, 'http://google.com')
         self.assertEqual(args, '')
 
@@ -43,15 +43,15 @@ class TestOperations(BaseTest):
             'source': 'https://google.com',
             'install_arguments': '--pre'
         }
-        url = operations.get_plugin_source(plugin)
-        args = operations.get_plugin_args(plugin)
+        url = installer.get_plugin_source(plugin)
+        args = installer.get_plugin_args(plugin)
 
         self.assertEqual(url, 'https://google.com')
         self.assertEqual(args, '--pre')
 
     def test_get_url_faulty_schema(self):
         self.assertRaises(NonRecoverableError,
-                          operations.get_plugin_source,
+                          installer.get_plugin_source,
                           {'source': 'bla://google.com'})
 
     def test_get_plugin_source_from_blueprints_dir(self):
@@ -60,7 +60,7 @@ class TestOperations(BaseTest):
         }
         with utils.env(constants.MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL_KEY,
                        'localhost'):
-            source = operations.get_plugin_source(
+            source = installer.get_plugin_source(
                 plugin,
                 blueprint_id='blueprint_id')
         self.assertEqual(
